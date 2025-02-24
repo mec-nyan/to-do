@@ -12,6 +12,17 @@ import locale
 from niceties import rounded_box
 
 
+def notes(screen):
+    screen.noutrefresh()
+    note = curses.newwin(16, 32, 4, 8)
+    curses.init_pair(1, 0, 3)
+    colour = curses.color_pair(1)
+    note.bkgd(colour)
+    note.addstr(0, 30, "x")
+    note.addstr(1, 1, "Ima note!")
+    note.getch()
+
+
 def todo(screen):
     items = []
     with open("items.txt", "r") as f:
@@ -121,16 +132,20 @@ try:
         screen.refresh()
         curses.napms(500)
         exit(0)
-    elif c == "n" or c == "?":
+    elif c == "n":
+        screen.clear()
+        screen.addnstr(2, 0, "Notes".center(cols), cols)
+        notes(screen)
+    elif c == "t":
+        screen.clear()
+        screen.addnstr(2, 0, "To do".center(cols), cols)
+        todo(screen)
+    else:
         screen.clear()
         screen.addnstr(2, 0, "To do (lol)!".center(cols), cols)
         screen.refresh()
         curses.napms(500)
         exit(0)
-    elif c == "t":
-        screen.clear()
-        screen.addnstr(2, 0, "To do".center(cols), cols)
-        todo(screen)
 
 
 finally:
