@@ -6,35 +6,13 @@ Because I always forget to do some stuff!
 """
 
 import curses
-import curses.ascii
+from curses import ascii
 import locale
 
-
-def rounded_box(win):
-    y, x = 0, 0
-    rows, cols = win.getmaxyx()
-    topleft = "╭"
-    topright = "╮"
-    botleft = "╰"
-    botright = "╯"
-    win.addstr(y, x, topleft)
-    win.addstr(y + rows - 1, x, botleft)
-    win.addstr(y, x + cols - 1, topright)
-    win.addstr(y + rows - 1, x + cols - 2, botright)
-    win.insstr(y + rows - 1, x + cols - 2, "─")
+from niceties import rounded_box
 
 
-def main(stdscr):
-    loc = locale.setlocale(locale.LC_ALL, "")
-    if not loc:
-        return 1
-
-    screen = curses.newwin(0, 0, 0, 0)
-    rows, cols = screen.getmaxyx()
-
-    screen.addnstr(2, 0, "Welcome!".center(cols), cols)
-    screen.noutrefresh()
-
+def todo(screen):
     items = []
     with open("items.txt", "r") as f:
         content = f.read()
@@ -54,8 +32,7 @@ def main(stdscr):
             for i in range(len(items)):
                 screen.addstr(3 + i, 8, f"{current == i and '>' or ' '} [ ] {items[i]}")
             screen.refresh()
-            c = screen.getch()
-            c = chr(c)
+            c = chr(screen.getch())
             if c == "j" and current < len(items) - 1:
                 current += 1
             elif c == "k" and current > 0:
@@ -81,19 +58,18 @@ def main(stdscr):
                 while True:
                     line = "".join(text)
                     prompt.clear()
-                    prompt.box()
                     rounded_box(prompt)
                     prompt.move(1, 2)
                     prompt.addstr(line)
-                    c = prompt.getch()
-                    if curses.ascii.isprint(c):
-                        text.append(chr(c))
-                    elif c == ord("\033"):
+                    d = prompt.getch()
+                    if ascii.isprint(d):
+                        text.append(chr(d))
+                    elif d == ord("\033"):
                         break
-                    elif c == ord("\177"):
+                    elif d == ord("\177"):
                         if len(text):
                             text.pop()
-                    elif c == ord("\n"):
+                    elif d == ord("\n"):
                         items.append(line)
                         text.clear()
                         break
@@ -101,8 +77,64 @@ def main(stdscr):
     with open("items.txt", "w") as f:
         f.write("\n".join(items))
 
-    return 0
+
+def setup():
+    curses.noecho()
+    curses.cbreak()
+    curses.curs_set(False)
+    if curses.has_colors():
+        try:
+            curses.start_color()
+            # curses.use_default_colors()
+        except:
+            raise
+
+    loc = locale.setlocale(locale.LC_ALL, "")
+    if not loc:
+        raise
 
 
-if __name__ == "__main__":
-    curses.wrapper(main)
+try:
+    screen = curses.initscr()
+    setup()
+
+    rows, cols = screen.getmaxyx()
+
+    screen.addnstr(2, 0, "Welcome!".center(cols), cols)
+
+    menu = [
+        {"item": "View to-do list", "keymap": "t"},
+        {"item": "View notes", "keymap": "n"},
+        {"item": "Quit", "keymap": "q"},
+        {"item": "Help", "keymap": "?"},
+    ]
+
+    for i in range(len(menu)):
+        key = menu[i]["keymap"]
+        item = menu[i]["item"]
+        screen.addstr(6 + i * 2, 0, f"{item:32} -> {key}".center(cols))
+
+    c = chr(screen.getch())
+    if c == "q":
+        screen.clear()
+        screen.addnstr(2, 0, "Bye!".center(cols), cols)
+        screen.refresh()
+        curses.napms(500)
+        exit(0)
+    elif c == "n" or c == "?":
+        screen.clear()
+        screen.addnstr(2, 0, "To do (lol)!".center(cols), cols)
+        screen.refresh()
+        curses.napms(500)
+        exit(0)
+    elif c == "t":
+        screen.clear()
+        screen.addnstr(2, 0, "To do".center(cols), cols)
+        todo(screen)
+
+
+finally:
+    if "screen" in locals():
+        curses.echo()
+        curses.nocbreak()
+        curses.endwin()
