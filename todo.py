@@ -24,6 +24,8 @@ def notes(screen):
 
 
 def todo(screen):
+    go_back = True
+
     items = []
     with open("items.txt", "r") as f:
         content = f.read()
@@ -31,6 +33,8 @@ def todo(screen):
             items = content.split("\n")
 
     prompt = curses.newwin(3, 50, rows - 10, (cols - 50) // 2)
+
+    info_line = curses.newwin(1, cols, rows - 2, 0)
 
     current = 0
 
@@ -43,12 +47,24 @@ def todo(screen):
             for i in range(len(items)):
                 screen.addstr(3 + i, 8, f"{current == i and '>' or ' '} [ ] {items[i]}")
             screen.refresh()
+
+            info_line.addstr(
+                0,
+                4,
+                "<i> Add item, <j> Next, <k> Previous, <x> Delete, <q> Quit, <esc> Back",
+            )
+            info_line.refresh()
+
             c = chr(screen.getch())
             if c == "j" and current < len(items) - 1:
                 current += 1
             elif c == "k" and current > 0:
                 current -= 1
             elif c == "q":
+                go_on = False
+                go_back = False
+                break
+            elif c == "\033":
                 go_on = False
                 break
             elif c == "x":
@@ -66,7 +82,10 @@ def todo(screen):
             elif c == "i":
                 curses.curs_set(True)
                 text = []
+                info_line.clear()
+                info_line.addstr(0, 4, "<Enter> Add item, <Esc> Cancel")
                 while True:
+                    info_line.refresh()
                     line = "".join(text)
                     prompt.clear()
                     rounded_box(prompt)
@@ -87,6 +106,8 @@ def todo(screen):
 
     with open("items.txt", "w") as f:
         f.write("\n".join(items))
+
+    return go_back
 
 
 def setup():
@@ -120,32 +141,36 @@ try:
         {"item": "Help", "keymap": "?"},
     ]
 
-    for i in range(len(menu)):
-        key = menu[i]["keymap"]
-        item = menu[i]["item"]
-        screen.addstr(6 + i * 2, 0, f"{item:32} -> {key}".center(cols))
+    while True:
+        screen.clear()
+        for i in range(len(menu)):
+            key = menu[i]["keymap"]
+            item = menu[i]["item"]
+            screen.addstr(6 + i * 2, 0, f"{item:32} -> {key}".center(cols))
 
-    c = chr(screen.getch())
-    if c == "q":
-        screen.clear()
-        screen.addnstr(2, 0, "Bye!".center(cols), cols)
-        screen.refresh()
-        curses.napms(500)
-        exit(0)
-    elif c == "n":
-        screen.clear()
-        screen.addnstr(2, 0, "Notes".center(cols), cols)
-        notes(screen)
-    elif c == "t":
-        screen.clear()
-        screen.addnstr(2, 0, "To do".center(cols), cols)
-        todo(screen)
-    else:
-        screen.clear()
-        screen.addnstr(2, 0, "To do (lol)!".center(cols), cols)
-        screen.refresh()
-        curses.napms(500)
-        exit(0)
+        c = chr(screen.getch())
+        if c == "q":
+            screen.clear()
+            screen.addnstr(2, 0, "Bye!".center(cols), cols)
+            screen.refresh()
+            curses.napms(500)
+            exit(0)
+        elif c == "n":
+            screen.clear()
+            screen.addnstr(2, 0, "Notes".center(cols), cols)
+            if not notes(screen):
+                break
+        elif c == "t":
+            screen.clear()
+            screen.addnstr(2, 0, "To do".center(cols), cols)
+            if not todo(screen):
+                break
+        else:
+            screen.clear()
+            screen.addnstr(2, 0, "To do (lol)!".center(cols), cols)
+            screen.refresh()
+            curses.napms(500)
+            exit(0)
 
 
 finally:
