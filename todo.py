@@ -12,6 +12,47 @@ import locale
 from niceties import rounded_box
 
 
+def popup(screen, msg, ask=False, icon=""):
+    msg = icon + " " + msg
+    if ask:
+        msg += " "
+
+    rows, cols = screen.getmaxyx()
+
+    popup_h = 5
+    popup_w = len(msg) + 4
+    if ask:
+        popup_w += 1
+
+    if popup_w > cols - 2:
+        raise
+    popup_y = (rows - popup_h) // 2
+    popup_x = (cols - popup_w) // 2
+
+    popup = curses.newwin(popup_h, popup_w, popup_y, popup_x)
+    curses.init_pair(1, 1, 0)
+    popup.bkgdset(curses.color_pair(1))
+
+    rounded_box(popup)
+
+    popup.addstr(2, 2, msg)
+
+    return popup
+
+
+def dialog(screen, msg):
+    curses.curs_set(True)
+    curses.echo()
+
+    win = popup(screen, msg, ask=True, icon=" ")
+    answer = win.getch()
+
+    curses.curs_set(False)
+    curses.noecho()
+
+    return answer
+
+
 def notes(screen):
     screen.noutrefresh()
     note = curses.newwin(16, 32, 4, 8)
@@ -68,17 +109,18 @@ def todo(screen):
                 go_on = False
                 break
             elif c == "x":
-                screen.addstr(rows - 1, 4, f"Delete item < {items[current]} > ? ")
-                confirm = screen.getch()
+                # TODO: Show the result on the same dialog window.
+                confirm = dialog(screen, f"Delete item '{items[current]}'?")
+                message = "Cancelled"
                 if confirm == ord("y"):
+                    message = "Item deleted!"
                     items.pop(current)
-                    screen.move(rows - 1, 4)
-                    screen.clrtoeol()
-                    screen.addstr("Item deleted!")
                     if current > 0:
                         current -= 1
-                    screen.refresh()
-                    curses.napms(1000)
+                info_line.clear()
+                info_line.addstr(0, 4, message)
+                info_line.refresh()
+                curses.napms(1000)
             elif c == "i":
                 curses.curs_set(True)
                 text = []
