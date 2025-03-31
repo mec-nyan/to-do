@@ -12,6 +12,26 @@ import locale
 from niceties import rounded_box
 
 
+# Aux
+def split_string(line: str, max_len: int) -> list[str]:
+    out: list[str] = []
+    while len(line) > max_len:
+        # Assume we'll find a space before max_len...
+        split_point = 0
+        while True:
+            next_point = line.find(" ", split_point + 1)
+            if next_point == -1:
+                break
+            if next_point > max_len:
+                break
+            split_point = next_point
+        if split_point < len(line):
+            out.append(line[:split_point])
+            line = line[split_point:].strip()
+    out.append(line)
+    return out
+
+
 def popup(screen, msg, ask=False, icon=""):
     msg = icon + " " + msg
     if ask:
@@ -73,20 +93,35 @@ def todo(screen):
         if len(content) > 1:
             items = content.split("\n")
 
+    rows, cols = screen.getmaxyx()
+
     prompt = curses.newwin(3, 50, rows - 10, (cols - 50) // 2)
 
     info_line = curses.newwin(1, cols, rows - 2, 0)
 
     current = 0
 
+    margin = 8
+    max_line_len = cols - (2 * margin)
+
     go_on = True
     while go_on:
         while True:
             curses.curs_set(False)
-            screen.move(3, 0)
+            screen.move(4, 0)
             screen.clrtobot()
+            y_pos = 4
             for i in range(len(items)):
-                screen.addstr(3 + i, 8, f"{current == i and '>' or ' '} [ ] {items[i]}")
+                cursor = current == i and ">" or " "
+                line = f"{cursor} [ ] "
+                screen.addstr(y_pos, margin, line)
+
+                lines = split_string(items[i], max_line_len - len(line))
+                x_pos = margin + len(line)
+                for line in lines:
+                    screen.addstr(y_pos, x_pos, line)
+                    y_pos += 1
+
             screen.refresh()
 
             info_line.addstr(
