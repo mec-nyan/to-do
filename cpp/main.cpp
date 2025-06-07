@@ -7,7 +7,6 @@
 int main() {
 
     struct notcurses_options opts{{}};
-    // opts.flags = NCOPTION_INHIBIT_SETLOCALE;
 
     struct notcurses* nc = notcurses_init(&opts, nullptr);
     if (not nc) {
@@ -15,7 +14,6 @@ int main() {
     }
 
     struct ncplane* std_plane = notcurses_stdplane(nc);
-    // ncplane_set_fg_rgb(std_plane, 0xFFFFFF);
 
     std::vector<std::string> todos;
 
@@ -41,7 +39,9 @@ int main() {
         // 3. Status line/help.
         uint height, width;
         ncplane_dim_yx(std_plane, &height, &width);
-        ncplane_printf_yx(std_plane, height - 2, 4, "[ i ] Add - [ q ] Quit");
+        std::string normal_mode_help{"< i > Add - < q > Quit"};
+        uint padding_left = (width - normal_mode_help.size()) / 2;
+        ncplane_printf_yx(std_plane, height - 2, padding_left, "%s", normal_mode_help.c_str());
 
         // 4. Refresh.
         notcurses_render(nc);
@@ -49,15 +49,20 @@ int main() {
         // 5. Handle input
         struct ncinput ni;
         uint input = notcurses_get_blocking(nc, &ni);
+        if (ni.evtype != NCTYPE_PRESS) {
+            continue;
+        }
         if (input == 'q' or input == NCKEY_ESC) {
             running = false;
         } else if (input == 'i') {
-            uint box_w = 40, box_h = 5;
+            uint box_w = width < 88 ? (width - 8) : 80, box_h = 5;
+            int box_y{static_cast<int>((height - (box_h + 2)))},
+                box_x{static_cast<int>(((width - box_w) / 2))};
             struct ncplane_options popts = {
                 .rows = box_h,
                 .cols = box_w,
-                .y = static_cast<int>((height - box_h) / 2),
-                .x = static_cast<int>((width - box_w) / 2),
+                .y = box_y,
+                .x = box_x,
                 .name = "input_box",
             };
 
@@ -65,19 +70,25 @@ int main() {
 
             rounded_border_grad(box);
 
-            ncplane_printf_yx(box, 1, 2, "Add: ");
+            ncplane_printf_yx(box, 0, 2, " New item ");
             notcurses_render(nc);
 
             std::string buffer;
             bool inserting = true;
+            std::string insert_mode_help{"<Esc> Abort - <Enter> Accept"};
+            uint padding_left = (width - insert_mode_help.size()) / 2;
+            ncplane_printf_yx(std_plane, height - 2, padding_left, "%s", insert_mode_help.c_str());
 
             while (inserting) {
                 ncplane_erase_region(box, 2, 2, 1, box_w - 4);
-                ncplane_printf_yx(box, 2, 2, "%s", buffer.c_str());
+                ncplane_printf_yx(box, 2, 2, "%s_", buffer.c_str());
                 notcurses_render(nc);
 
                 struct ncinput ni;
                 int ch = notcurses_get_blocking(nc, &ni);
+                if (ni.evtype != NCTYPE_PRESS) {
+                    continue;
+                }
 
                 if (ch == NCKEY_ESC) {
                     inserting = false;
