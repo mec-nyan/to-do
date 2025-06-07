@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -19,6 +20,9 @@ type model struct {
 	todos     []string
 	textInput textinput.Model
 	mode      mode
+	size      struct {
+		width, height int
+	}
 }
 
 func initialModel() model {
@@ -41,6 +45,11 @@ func (m model) Init() tea.Cmd {
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+
+	case tea.WindowSizeMsg:
+		m.size.width = msg.Width
+		m.size.height = msg.Height
+		return m, nil
 
 	case tea.KeyMsg:
 		switch m.mode {
@@ -77,27 +86,39 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	s := "  Todo List\n\n"
+	var s string
+
+	// Header:
+	s += "\n  \x1b[33m  \x1b[0mTodo List\n\n"
+
+	// Items:
 	if len(m.todos) == 0 {
-		s += "\tNothing to see here  \n\n"
+		s += "\tNothing to see here \x1b[31m "
 	} else {
 		for i, todo := range m.todos {
 			s += fmt.Sprintf("\t%3d - %s\n", i, todo)
 		}
 	}
-	s += "\n"
 
+	// Spacer:
+	visibleLines := len(m.todos) + 3 // Header size.
+	paddingLines := m.size.height - visibleLines - 2
+	if paddingLines > 0 {
+		s += strings.Repeat("\n", paddingLines)
+	}
+
+	// Footer:
 	if m.mode == modeInput {
-		s += m.textInput.View() + "\n"
+		s += m.textInput.View()
 	} else {
-		s += "\n[ i ] Add - [ q ] Quit\n"
+		s += "  \x1b[32m[ i ] Add - [ q ] Quit"
 	}
 
 	return s
 }
 
 func main() {
-	app := tea.NewProgram(initialModel())
+	app := tea.NewProgram(initialModel(), tea.WithAltScreen())
 	if _, err := app.Run(); err != nil {
 		fmt.Println("Oops!:", err)
 		os.Exit(1)
