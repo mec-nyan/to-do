@@ -7,7 +7,7 @@
 int main() {
 
     struct notcurses_options opts{{}};
-    opts.flags = NCOPTION_INHIBIT_SETLOCALE;
+    // opts.flags = NCOPTION_INHIBIT_SETLOCALE;
 
     struct notcurses* nc = notcurses_init(&opts, nullptr);
     if (not nc) {
@@ -62,6 +62,8 @@ int main() {
             };
 
             ncplane* box = ncplane_create(std_plane, &popts);
+
+            rounded_border(box);
 
             ncplane_printf_yx(box, 1, 2, "Add: ");
             notcurses_render(nc);
