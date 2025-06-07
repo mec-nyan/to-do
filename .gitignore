@@ -1,3 +1,4 @@
 items.txt
 __*
-todo.json
+todos.json
+*.o
