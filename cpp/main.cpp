@@ -63,7 +63,7 @@ int main() {
 
             ncplane* box = ncplane_create(std_plane, &popts);
 
-            rounded_border(box);
+            rounded_border_grad(box);
 
             ncplane_printf_yx(box, 1, 2, "Add: ");
             notcurses_render(nc);
