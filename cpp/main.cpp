@@ -1,6 +1,6 @@
 // main.cpp
 
-#include <notcurses/notcurses.h>
+#include "helper.hpp"
 #include <string>
 #include <vector>
 
@@ -49,10 +49,50 @@ int main() {
         // 5. Handle input
         struct ncinput ni;
         uint input = notcurses_get_blocking(nc, &ni);
-        if (input == 'q') {
+        if (input == 'q' or input == NCKEY_ESC) {
             running = false;
         } else if (input == 'i') {
-            // ...
+            uint box_w = 40, box_h = 5;
+            struct ncplane_options popts = {
+                .rows = box_h,
+                .cols = box_w,
+                .y = static_cast<int>((height - box_h) / 2),
+                .x = static_cast<int>((width - box_w) / 2),
+                .name = "input_box",
+            };
+
+            ncplane* box = ncplane_create(std_plane, &popts);
+
+            ncplane_printf_yx(box, 1, 2, "Add: ");
+            notcurses_render(nc);
+
+            std::string buffer;
+            bool inserting = true;
+
+            while (inserting) {
+                ncplane_erase_region(box, 2, 2, 1, box_w - 4);
+                ncplane_printf_yx(box, 2, 2, "%s", buffer.c_str());
+                notcurses_render(nc);
+
+                struct ncinput ni;
+                int ch = notcurses_get_blocking(nc, &ni);
+
+                if (ch == NCKEY_ESC) {
+                    inserting = false;
+                } else if (ch == NCKEY_ENTER or ch == '\n') {
+                    if (not buffer.empty()) {
+                        todos.push_back(buffer);
+                    }
+                    inserting = false;
+                } else if (ch == NCKEY_BACKSPACE or ch == 127 or ch == '\b') {
+                    if (not buffer.empty())
+                        buffer.pop_back();
+                } else if (ch >= 32 and ch < 127) {
+                    buffer.push_back((char)ch);
+                }
+            }
+
+            ncplane_destroy(box);
         }
     }
 
