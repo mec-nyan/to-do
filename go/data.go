@@ -8,22 +8,22 @@ import (
 
 const	dataFile = "todos.json"
 
-func loadTodos() []string {
+func loadTodos() []todo {
 	data, err := os.ReadFile(dataFile)
 	if err != nil {
-		return []string{}
+		return []todo{}
 	}
 
-	var todos []string
+	var todos []todo
 	if err := json.Unmarshal(data, &todos); err != nil {
 		fmt.Println("Error loading todos:", err)
-		return []string{}
+		return []todo{}
 	}
 
 	return todos
 }
 
-func saveTodos(todos []string) {
+func saveTodos(todos []todo) {
 	data, err := json.MarshalIndent(todos, "", "  ")
 	if err != nil {
 		fmt.Println("Error saving todos:", err)
