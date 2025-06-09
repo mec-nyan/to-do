@@ -94,14 +94,22 @@ func (m model) View() string {
 	var s string
 
 	// Header:
-	s += "\n  \x1b[33m  \x1b[0mTodo List\n\n"
+	header := "Todo List"
+	header += lipgloss.NewStyle().Foreground(lipgloss.Color("#e0af68")).Render("  ")
+	s += "\n" 
+	s += lipgloss.NewStyle().
+		Align(lipgloss.Center).
+		Width(m.size.width).
+		Render(header)
+
+	s += "\n\n"
 
 	// Items:
 	if len(m.todos) == 0 {
 		s += "\tNothing to see here \x1b[31m "
 	} else {
 		for i, todo := range m.todos {
-			s += fmt.Sprintf("\t%3d - %s\n", i, todo)
+			s += fmt.Sprintf("  󰄱 %2d - %s\n", i, todo)
 		}
 	}
 
@@ -112,13 +120,19 @@ func (m model) View() string {
 		s += strings.Repeat("\n", paddingLines)
 	}
 
+	footer := "[ i ] New item - [ q ] Quit"
 	// Footer:
 	if m.mode == modeInput {
-		s +=  m.inputStyle().Render(m.textInput.View()) + "\n"
+		s += m.inputStyle().Render(m.textInput.View()) + "\n"
+		footer = "[ Enter ] Add item - [ Escape ] Discard"
 	} else {
 		s += "\n\n\n"
 	}
-	s += "\n  \x1b[32m[ i ] Add - [ q ] Quit"
+	s += "\n"
+
+	s += lipgloss.NewStyle().Align(lipgloss.Center).
+		Foreground(lipgloss.Color("#7aa2f7")).
+		Width(m.size.width).Render(footer)
 
 	return s
 }
