@@ -10,20 +10,21 @@ import curses
 import sys
 import json
 
-# Check if there are previously saved items. If so, load them.
-# TODO: Check if the file exists.
-with open("items.json", "r") as saved:
-    items: dict[str, list[str]] = json.load(saved)
-
-
 # ┌───────────┐
 # │ Main Loop │
 # └───────────┘
+
 
 def main(_):
     """
     This should be a docstring!
     """
+
+    # Check if there are previously saved items. If so, load them.
+    # TODO: Check if the file exists.
+    with open("items.json", "r") as saved:
+        items: dict[str, list[str]] = json.load(saved)
+
     # ┌────┐
     # │ UI │
     # └────┘
@@ -33,21 +34,57 @@ def main(_):
 
     curses.start_color()
     curses.use_default_colors()
+    curses.curs_set(False)
 
     screen = curses.initscr()
-    columns, rows = screen.getmaxyx()
+    rows, columns = screen.getmaxyx()
 
-    screen.addstr(f"Rows: {rows}\nCols: {columns}")
-    screen.getch()
+    # Split in two panes.
+    pane_left_w = columns // 2
+    pane_right_w = columns - pane_left_w
 
-    screen.clear()
+    pane_left = curses.newwin(rows, pane_left_w, 0, 0)
+    pane_right = curses.newwin(rows, pane_right_w, 0, pane_left_w)
 
-    for k, v in items.items():
-        screen.addstr(f"{k}\n")
-        for bullet in v:
-            screen.addstr(f"\t{bullet}\n")
+    selected = 0
+    todos = list(items.keys())
+    quit = False
 
-    screen.getch()
+    while not quit:
+        pane_left.erase()
+        pane_right.erase()
+
+        for i, todo in enumerate(todos):
+            indicator = " "
+            if i == selected:
+                indicator = ">"
+            pane_left.addstr(f"{indicator} {todo}\n")
+
+        pane_left.noutrefresh()
+
+        sub_items = items[todos[selected]]
+        if len(sub_items) == 0:
+            pane_right.addstr("???")
+        else:
+            for i, si in enumerate(sub_items):
+                pane_right.addstr(f"{i+1}.- {si}\n")
+
+        pane_right.noutrefresh()
+
+        curses.doupdate()
+
+        action = pane_left.getch()
+        match chr(action):
+            case 'j':
+                selected += 1
+                if selected == len(todos):
+                    selected = 0  # Wrap around.
+            case 'k':
+                selected -= 1
+                if selected < 0:
+                    selected = len(todos) - 1
+            case 'q':
+                quit = True
 
 
 if __name__ == "__main__":
