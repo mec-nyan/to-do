@@ -10,6 +10,8 @@ import curses
 import sys
 import json
 
+MIN_WIDTH = 100
+
 # ┌───────────┐
 # │ Main Loop │
 # └───────────┘
@@ -39,12 +41,25 @@ def main(_):
     screen = curses.initscr()
     rows, columns = screen.getmaxyx()
 
-    # Split in two panes.
-    pane_left_w = columns // 2
-    pane_right_w = columns - pane_left_w
+    # Add title:
+    win_title = "Shit to do"
+    padding_left = (columns - len(win_title)) // 2
+    screen.addstr(1, padding_left, win_title)
+    screen.noutrefresh()
 
-    pane_left = curses.newwin(rows, pane_left_w, 0, 0)
-    pane_right = curses.newwin(rows, pane_right_w, 0, pane_left_w)
+    # Split in two panes.
+
+    horz_padding = 0
+    if columns > MIN_WIDTH:
+        max_horz_padding = 8
+        horz_padding = min((columns - MIN_WIDTH) // 2, max_horz_padding)
+
+    available_width = columns - horz_padding * 2
+    pane_left_w = available_width // 2
+    pane_right_w = available_width - pane_left_w
+
+    pane_left = curses.newwin(rows - 6, pane_left_w, 3, horz_padding)
+    pane_right = curses.newwin(rows - 6, pane_right_w, 3, pane_left_w + horz_padding)
 
     selected = 0
     todos = list(items.keys())
