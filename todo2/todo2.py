@@ -101,6 +101,22 @@ def main(_):
             return ''.join(input_str)
         return ""
 
+    def show_codes() -> None:
+        last = 0
+        curses.curs_set(True)
+        while True:
+            screen.move(rows - 1, 0)
+            screen.clrtoeol()
+            screen.addstr(f"hex: {hex(last):>6} oct: {oct(last):>6} dec: {last:>6}", curses.A_ITALIC)
+            next = screen.getch()
+            if last == next:
+                break
+            last = next
+        screen.move(rows - 1, 0)
+        screen.clrtoeol()
+        screen.noutrefresh()
+        curses.curs_set(False)
+
     selected = 0
     todos = list(items.keys())
     quit = False
@@ -140,6 +156,8 @@ def main(_):
                     selected = len(todos) - 1
             case 'i':
                 get_item()
+            case 'x':
+                show_codes()
             case 'q':
                 quit = True
 
