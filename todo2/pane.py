@@ -149,14 +149,41 @@ class SimplePane:
 class Pane:
 
     def __init__(self, geometry: Geometry = Geometry(),
-                 padding: Padding = None) -> None:
+                 padding: Padding = Padding(), border: bool = False,
+                 title: str = None, title_pos: str = None) -> None:
+
+        # Outer pane geometry
         self.top = geometry.pos.x
         self.left = geometry.pos.y
         self.rows = geometry.size.height
         self.cols = geometry.size.width
-        self.padding = padding
 
-        self.init()
+        # Inner pane geometry
+        self.inner_top = padding.top
+        self.inner_left = padding.left
+        self.inner_rows = self.rows - (padding.top + padding.bottom)
+        self.inner_cols = self.cols - (padding.left + padding.right)
 
-    def init(self):
-        ...
+        # TODO: Should we check for errors/exceptions?
+        self.outer_pane = curses.newwin(self.cols, self.rows, self.left,
+                                        self.right)
+        self.inner_pane = curses.newwin(self.inner_cols, self.inner_rows,
+                                        self.inner_top, self.inner_left)
+
+        # Border
+        # TODO: Assume padding is at least 1 (for border drawing).
+        if border:
+            # TODO: Other borders (i.e. rounded, dotted, etc)
+            self.outer_pane.box()
+
+        # Title
+        if title is not None:
+            match title_pos:
+                case 'left':
+                    ...
+                case 'right':
+                    ...
+                case 'center':
+                    ...
+                case _:
+                    ...
