@@ -51,7 +51,7 @@ def main(_):
 
     horz_padding = 0
     if columns > MIN_WIDTH:
-        max_horz_padding = 8
+        max_horz_padding = 16
         horz_padding = min((columns - MIN_WIDTH) // 2, max_horz_padding)
 
     available_width = columns - horz_padding * 2
@@ -59,7 +59,47 @@ def main(_):
     pane_right_w = available_width - pane_left_w
 
     pane_left = curses.newwin(rows - 6, pane_left_w, 3, horz_padding)
-    pane_right = curses.newwin(rows - 6, pane_right_w, 3, pane_left_w + horz_padding)
+    pane_right = curses.newwin(
+        rows - 6, pane_right_w, 3, pane_left_w + horz_padding)
+
+    # Insert window:
+    input_win_w = MIN_WIDTH
+    input_win_h = 3
+    input_win_x = (columns - MIN_WIDTH) // 2
+    input_win_y = rows // 2 - 2
+    input_win = curses.newwin(
+        input_win_h,
+        input_win_w,
+        input_win_y,
+        input_win_x)
+
+    def get_item() -> str:
+        max_str_len = input_win_w - 7
+        curses.curs_set(True)
+        input_str = []
+        getting = True
+        accept = False
+        while getting:
+            input_win.erase()
+            input_win.box()
+            input_win.addstr(1, 2, f"> {''.join(input_str)}")
+            next = input_win.getch()
+            match chr(next):
+                case '\x1b':
+                    getting = False
+                case '\n':
+                    getting = False
+                    # accept = True
+                case '\x7f':
+                    if len(input_str) > 0:
+                        input_str.pop()
+                case _:
+                    if chr(next).isprintable() and len(input_str) < max_str_len:
+                        input_str.append(chr(next))
+        curses.curs_set(False)
+        if accept:
+            return ''.join(input_str)
+        return ""
 
     selected = 0
     todos = list(items.keys())
@@ -98,6 +138,8 @@ def main(_):
                 selected -= 1
                 if selected < 0:
                     selected = len(todos) - 1
+            case 'i':
+                get_item()
             case 'q':
                 quit = True
 
