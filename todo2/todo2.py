@@ -89,10 +89,12 @@ def main(_):
                     getting = False
                 case '\n':
                     getting = False
-                    # accept = True
+                    accept = True
                 case '\x7f':
                     if len(input_str) > 0:
                         input_str.pop()
+                case '\x15':  # C-U
+                    input_str = []
                 case _:
                     if chr(next).isprintable() and len(input_str) < max_str_len:
                         input_str.append(chr(next))
@@ -107,7 +109,8 @@ def main(_):
         while True:
             screen.move(rows - 1, 0)
             screen.clrtoeol()
-            screen.addstr(f"hex: {hex(last):>6} oct: {oct(last):>6} dec: {last:>6}", curses.A_ITALIC)
+            screen.addstr(f"hex: {hex(last):>6} oct: {
+                          oct(last):>6} dec: {last:>6}", curses.A_ITALIC)
             next = screen.getch()
             if last == next:
                 break
@@ -117,11 +120,27 @@ def main(_):
         screen.noutrefresh()
         curses.curs_set(False)
 
+    def delete_item(key: str) -> bool:
+        screen.move(rows - 1, 0)
+        screen.clrtoeol()
+        curses.curs_set(True)
+        screen.addstr(f'Delete item "{key}"? ')
+        action = screen.getch()
+        if chr(action) == '\n':
+            del items[key]
+            return True
+        screen.move(rows - 1, 0)
+        screen.clrtoeol()
+        screen.noutrefresh()
+        curses.curs_set(False)
+        return False
+
     selected = 0
-    todos = list(items.keys())
     quit = False
 
     while not quit:
+        todos = list(items.keys())
+
         pane_left.erase()
         pane_right.erase()
 
@@ -155,10 +174,20 @@ def main(_):
                 if selected < 0:
                     selected = len(todos) - 1
             case 'i':
-                get_item()
-            case 'x':
+                new_item = get_item()
+                if len(new_item) > 0:
+                    items[new_item] = []
+                    with open("./items.json", "w") as file:
+                        file.write(json.dumps(items, indent="  "))
+            case 'c':
                 show_codes()
-            case 'q':
+            case 'x':
+                if delete_item(todos[selected]):
+                    with open("./items.json", "w") as file:
+                        file.write(json.dumps(items, indent="  "))
+                    if selected > 0:
+                        selected -= 1
+            case 'q' | '\x1b':
                 quit = True
 
 
