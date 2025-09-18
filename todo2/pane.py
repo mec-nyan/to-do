@@ -110,7 +110,40 @@ class SimplePane:
     """
 
     def __init__(self, geometry: Geometry = Geometry()) -> None:
-        ...
+        self.top = geometry.pos.x
+        self.left = geometry.pos.y
+        self.rows = geometry.size.height
+        self.cols = geometry.size.width
+
+        # TODO: Check for errors/exceptions
+        self.rect = curses.newwin(self.cols, self.rows, self.top, self.left)
+
+    def erase(self) -> None:
+        self.rect.erase()
+
+    def clear(self) -> None:
+        self.rect.clear()
+
+    def clear_to_eol(self) -> None:
+        self.rect.clrtoeol()
+
+    def clear_to_bot(self) -> None:
+        self.rect.clrtobot()
+
+    def refresh(self) -> None:
+        self.rect.refresh()
+
+    def noutrefresh(self) -> None:
+        self.rect.noutrefresh()
+
+    def getch(self) -> int:
+        return self.rect.getch()
+
+    def addstr(self, *args) -> None:
+        self.rect.addstr(*args)
+
+    def move(self, x, y) -> None:
+        self.rect.move(y, x)
 
 
 class Pane:
