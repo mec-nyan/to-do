@@ -146,7 +146,7 @@ class SimplePane:
         self.rect.move(y, x)
 
 
-class Pane:
+class Pane(SimplePane):
 
     def __init__(self, geometry: Geometry = Geometry(),
                  padding: Padding = Padding(), border: bool = False,
@@ -164,17 +164,19 @@ class Pane:
         self.inner_rows = self.rows - (padding.top + padding.bottom)
         self.inner_cols = self.cols - (padding.left + padding.right)
 
-        # TODO: Should we check for errors/exceptions?
-        self.outer_pane = curses.newwin(self.cols, self.rows, self.left,
-                                        self.right)
-        self.inner_pane = curses.newwin(self.inner_cols, self.inner_rows,
-                                        self.inner_top, self.inner_left)
+        super().__init__(Geometry(
+            Position(self.inner_left, self.inner_top),
+            Size(self.inner_cols, self.inner_rows)
+        ))
+
+        self.outer_rect = curses.newwin(self.rows, self.cols,
+                                        self.top, self.left)
 
         # Border
         # TODO: Assume padding is at least 1 (for border drawing).
         if border:
             # TODO: Other borders (i.e. rounded, dotted, etc)
-            self.outer_pane.box()
+            self.outer_rect.box()
 
         # Title
         if title is not None:
