@@ -50,13 +50,14 @@ class App:
         rows, columns = screen.getmaxyx()
 
         # Let's try to use our Pane class
-        big_pane = Pane(Geometry(Position(), Size(columns, rows)), Padding(2, 4), border=True)
-        # big_pane.addstr(1, 1, "I'm a pane!")
-        # big_pane.rect.box()
+        big_pane = Pane(Geometry(Position(), Size(columns, rows)), Padding(2, 4, 2, 4), border=True)
+        big_pane.addstr(1, 1, "I'm a pane!")
+        big_pane.rect.box()
         big_pane.outer_rect.box()
         big_pane.outer_rect.addstr("foo")
         big_pane.outer_rect.refresh()
         curses.doupdate()
+        big_pane.outer_rect.getch()
         big_pane.getch()
 
         sys.exit()

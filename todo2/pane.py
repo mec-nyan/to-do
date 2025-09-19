@@ -69,7 +69,9 @@ class Padding:
         # CSS style initialisation.
         if top is not None:
             self.top = top
+            self.right = top
             self.bottom = top
+            self.left = top
         if right is not None:
             self.right = right
             self.left = right
@@ -110,8 +112,8 @@ class SimplePane:
     """
 
     def __init__(self, geometry: Geometry = Geometry()) -> None:
-        self.top = geometry.pos.x
-        self.left = geometry.pos.y
+        self.top = geometry.pos.y
+        self.left = geometry.pos.x
         self.rows = geometry.size.height
         self.cols = geometry.size.width
 
@@ -152,25 +154,19 @@ class Pane(SimplePane):
                  padding: Padding = Padding(), border: bool = False,
                  title: str = None, title_pos: str = None) -> None:
 
-        # Outer pane geometry
-        self.top = geometry.pos.x
-        self.left = geometry.pos.y
-        self.rows = geometry.size.height
-        self.cols = geometry.size.width
-
         # Inner pane geometry
         self.inner_top = padding.top
         self.inner_left = padding.left
-        self.inner_rows = self.rows - (padding.top + padding.bottom)
-        self.inner_cols = self.cols - (padding.left + padding.right)
+        self.inner_rows = geometry.size.height - (padding.top + padding.bottom)
+        self.inner_cols = geometry.size.width - (padding.left + padding.right)
 
         super().__init__(Geometry(
             Position(self.inner_left, self.inner_top),
             Size(self.inner_cols, self.inner_rows)
         ))
 
-        self.outer_rect = curses.newwin(self.rows, self.cols,
-                                        self.top, self.left)
+        self.outer_rect = curses.newwin(geometry.size.height, geometry.size.width,
+                                        geometry.pos.y, geometry.pos.x)
 
         # Border
         # TODO: Assume padding is at least 1 (for border drawing).
