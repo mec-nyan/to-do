@@ -9,7 +9,7 @@ import curses
 import sys
 import json
 
-from pane import *
+from pane import Pane, SimplePane, Geometry, Position, Size, Padding
 
 
 class App:
@@ -71,26 +71,32 @@ class App:
         # pane_right = curses.newwin(
         #     rows - 6, pane_right_w, 3, pane_left_w + horz_padding)
 
-        pane_left = Pane(Geometry(Position(horz_padding, 3), Size(pane_left_w, rows - 6)), Padding(1, 2), True)
+        pane_left = Pane(Geometry(Position(horz_padding, 3), Size(
+            pane_left_w, rows - 6)), Padding(1, 2), True)
         pane_left.addstr("Left")
         pane_left.getch()
 
-        pane_right = Pane(Geometry(Position(pane_left_w + horz_padding, 3), Size(pane_right_w, rows - 6)), Padding(1, 2), True)
+        pane_right = Pane(Geometry(Position(pane_left_w + horz_padding, 3),
+                          Size(pane_right_w, rows - 6)), Padding(1, 2), True)
         pane_right.addstr("Right")
         pane_right.getch()
-
-        sys.exit()
 
         # Insert window:
         input_win_w = self.MIN_WIDTH
         input_win_h = 3
         input_win_x = (columns - self.MIN_WIDTH) // 2
         input_win_y = rows // 2 - 2
-        input_win = curses.newwin(
-            input_win_h,
-            input_win_w,
-            input_win_y,
-            input_win_x)
+        # input_win = curses.newwin(
+        #     input_win_h,
+        #     input_win_w,
+        #     input_win_y,
+        #     input_win_x)
+
+        input_win = Pane(Geometry(Position(input_win_x, input_win_y), Size(
+            input_win_w, input_win_h)), Padding(), True)
+        input_win.getch()
+
+        sys.exit()
 
         def get_item() -> str:
             max_str_len = input_win_w - 7
