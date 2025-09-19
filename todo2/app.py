@@ -9,6 +9,8 @@ import curses
 import sys
 import json
 
+from pane import *
+
 
 class App:
     """
@@ -46,6 +48,18 @@ class App:
 
         screen = curses.initscr()
         rows, columns = screen.getmaxyx()
+
+        # Let's try to use our Pane class
+        big_pane = Pane(Geometry(Position(), Size(columns, rows)), Padding(2, 4), border=True)
+        # big_pane.addstr(1, 1, "I'm a pane!")
+        # big_pane.rect.box()
+        big_pane.outer_rect.box()
+        big_pane.outer_rect.addstr("foo")
+        big_pane.outer_rect.refresh()
+        curses.doupdate()
+        big_pane.getch()
+
+        sys.exit()
 
         # Add title:
         win_title = "Shit to do"
@@ -115,8 +129,7 @@ class App:
             while True:
                 screen.move(rows - 1, 0)
                 screen.clrtoeol()
-                screen.addstr(f"hex: {hex(last):>6} oct: {
-                              oct(last):>6} dec: {last:>6}", curses.A_ITALIC)
+                screen.addstr(f"hex: {hex(last):>6} oct: {oct(last):>6} dec: {last:>6}", curses.A_ITALIC)
                 next = screen.getch()
                 if last == next:
                     break

@@ -116,7 +116,7 @@ class SimplePane:
         self.cols = geometry.size.width
 
         # TODO: Check for errors/exceptions
-        self.rect = curses.newwin(self.cols, self.rows, self.top, self.left)
+        self.rect = curses.newwin(self.rows, self.cols, self.top, self.left)
 
     def erase(self) -> None:
         self.rect.erase()
@@ -177,6 +177,7 @@ class Pane(SimplePane):
         if border:
             # TODO: Other borders (i.e. rounded, dotted, etc)
             self.outer_rect.box()
+            self.outer_rect.refresh()
 
         # Title
         if title is not None:
@@ -189,3 +190,4 @@ class Pane(SimplePane):
                     ...
                 case _:
                     ...
+            self.outer_rect.noutrefresh()
