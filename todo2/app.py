@@ -49,31 +49,19 @@ class App:
         screen = curses.initscr()
         rows, columns = screen.getmaxyx()
 
-        # Let's try to use our Pane class
-        big_pane = Pane(Geometry(Position(), Size(columns, rows)), Padding(2, 4, 2, 4), border=True)
-        big_pane.addstr(1, 1, "I'm a pane!")
-        big_pane.rect.box()
-        big_pane.outer_rect.box()
-        big_pane.outer_rect.addstr("foo")
-        big_pane.outer_rect.refresh()
-        curses.doupdate()
-        big_pane.outer_rect.getch()
-        big_pane.getch()
-
-        sys.exit()
-
         # Add title:
         win_title = "Shit to do"
-        padding_left = (columns - len(win_title)) // 2
-        screen.addstr(1, padding_left, win_title)
-        screen.noutrefresh()
+        title_pane = SimplePane(Geometry(Position(), Size(columns, 3)))
+        title_pane.addstr_centered(1, win_title)
+        title_pane.getch()
 
         # Split in two panes.
 
         horz_padding = 0
         if columns > self.MIN_WIDTH:
             max_horz_padding = 16
-            horz_padding = min((columns - self.MIN_WIDTH) // 2, max_horz_padding)
+            horz_padding = min((columns - self.MIN_WIDTH) //
+                               2, max_horz_padding)
 
         available_width = columns - horz_padding * 2
         pane_left_w = available_width // 2
@@ -130,7 +118,8 @@ class App:
             while True:
                 screen.move(rows - 1, 0)
                 screen.clrtoeol()
-                screen.addstr(f"hex: {hex(last):>6} oct: {oct(last):>6} dec: {last:>6}", curses.A_ITALIC)
+                screen.addstr(
+                    f"hex: {hex(last):>6} oct: {oct(last):>6} dec: {last:>6}", curses.A_ITALIC)
                 next = screen.getch()
                 if last == next:
                     break

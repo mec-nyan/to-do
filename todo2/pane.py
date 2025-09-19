@@ -144,6 +144,14 @@ class SimplePane:
     def addstr(self, *args) -> None:
         self.rect.addstr(*args)
 
+    def addstr_centered(self, line: int, text: str, *args) -> None:
+        # TODO: Better size checking!
+        # TODO: Better error handling!
+        if len(text) > self.cols:
+            raise
+        padding = (self.cols - len(text)) // 2
+        self.rect.addstr(line, padding, text, *args)
+
     def move(self, x, y) -> None:
         self.rect.move(y, x)
 
@@ -153,6 +161,12 @@ class Pane(SimplePane):
     def __init__(self, geometry: Geometry = Geometry(),
                  padding: Padding = Padding(), border: bool = False,
                  title: str = None, title_pos: str = None) -> None:
+
+        if border:
+            padding.right += 1
+            padding.left += 1
+            padding.top += 1
+            padding.bottom += 1
 
         # Inner pane geometry
         self.inner_top = padding.top
@@ -165,8 +179,13 @@ class Pane(SimplePane):
             Size(self.inner_cols, self.inner_rows)
         ))
 
-        self.outer_rect = curses.newwin(geometry.size.height, geometry.size.width,
-                                        geometry.pos.y, geometry.pos.x)
+        # Create an outer window for border/title
+        # TODO: Should we allow for modification?
+        if border or title:
+            self.outer_rect = curses.newwin(geometry.size.height,
+                                            geometry.size.width,
+                                            geometry.pos.y,
+                                            geometry.pos.x)
 
         # Border
         # TODO: Assume padding is at least 1 (for border drawing).
