@@ -67,9 +67,19 @@ class App:
         pane_left_w = available_width // 2
         pane_right_w = available_width - pane_left_w
 
-        pane_left = curses.newwin(rows - 6, pane_left_w, 3, horz_padding)
-        pane_right = curses.newwin(
-            rows - 6, pane_right_w, 3, pane_left_w + horz_padding)
+        # pane_left = curses.newwin(rows - 6, pane_left_w, 3, horz_padding)
+        # pane_right = curses.newwin(
+        #     rows - 6, pane_right_w, 3, pane_left_w + horz_padding)
+
+        pane_left = Pane(Geometry(Position(horz_padding, 3), Size(pane_left_w, rows - 6)), Padding(1, 2), True)
+        pane_left.addstr("Left")
+        pane_left.getch()
+
+        pane_right = Pane(Geometry(Position(pane_left_w + horz_padding, 3), Size(pane_right_w, rows - 6)), Padding(1, 2), True)
+        pane_right.addstr("Right")
+        pane_right.getch()
+
+        sys.exit()
 
         # Insert window:
         input_win_w = self.MIN_WIDTH

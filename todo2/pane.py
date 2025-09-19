@@ -169,8 +169,8 @@ class Pane(SimplePane):
             padding.bottom += 1
 
         # Inner pane geometry
-        self.inner_top = padding.top
-        self.inner_left = padding.left
+        self.inner_top = padding.top + geometry.pos.y
+        self.inner_left = padding.left + geometry.pos.x
         self.inner_rows = geometry.size.height - (padding.top + padding.bottom)
         self.inner_cols = geometry.size.width - (padding.left + padding.right)
 
