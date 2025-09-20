@@ -48,6 +48,16 @@ class App:
         with open(file, "r") as saved:
             self.items: dict[str, list[str]] = json.load(saved)
 
+    def init(self) -> None:
+        self.add_title()
+
+    def add_title(self, title: str = "Shit to do") -> None:
+        self.title = title
+        self.title_pane = SimplePane(Geometry(Position(),
+                                              Size(self.columns, 3)))
+        self.title_pane.addstr_centered(1, self.title)
+        self.title_pane.getch()
+
     def end(self) -> None:
         self.screen.keypad(0)
         curses.echo()
@@ -55,12 +65,6 @@ class App:
         curses.endwin()
 
     def do_stuff(self) -> None:
-        # Add title:
-        win_title = "Shit to do"
-        title_pane = SimplePane(Geometry(Position(), Size(self.columns, 3)))
-        title_pane.addstr_centered(1, win_title)
-        title_pane.getch()
-
         # Split in two panes.
 
         horz_padding = 0
@@ -72,10 +76,6 @@ class App:
         available_width = self.columns - horz_padding * 2
         pane_left_w = available_width // 2
         pane_right_w = available_width - pane_left_w
-
-        # pane_left = curses.newwin(rows - 6, pane_left_w, 3, horz_padding)
-        # pane_right = curses.newwin(
-        #     rows - 6, pane_right_w, 3, pane_left_w + horz_padding)
 
         pane_left = Pane(Geometry(Position(horz_padding, 3), Size(
             pane_left_w, self.rows - 6)), Padding(1, 2), True)
@@ -227,6 +227,7 @@ class App:
         """
         try:
             self.load()
+            self.init()
             self.do_stuff()
         except Exception as e:
             raise e
