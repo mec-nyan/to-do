@@ -27,19 +27,12 @@ class App:
     MIN_WIDTH = 100
 
     def __init__(self, opts=None) -> None:
-        ...
-
-    def init(self) -> None:
-        if not curses.has_colors():
-            raise ErrorNoColours
-
         self.screen = curses.initscr()
         self.rows, self.columns = self.screen.getmaxyx()
 
         curses.noecho()
         curses.cbreak()
         curses.curs_set(False)
-        self.screen.keypad(1)
 
         try:
             curses.start_color()
@@ -48,7 +41,12 @@ class App:
             raise ErrorNoColours
 
     def load(self, file: str = "items.json") -> None:
-        ...
+        # Check that the file exists, or created
+        with open(file, "a") as _:
+            ...
+
+        with open(file, "r") as saved:
+            self.items: dict[str, list[str]] = json.load(saved)
 
     def end(self) -> None:
         self.screen.keypad(0)
@@ -56,30 +54,22 @@ class App:
         curses.nocbreak()
         curses.endwin()
 
-    def run(self):
-        """
-        Start here!
-        """
-        # Check if there are previously saved items. If so, load them.
-        # TODO: Check if the file exists.
-        with open("items.json", "r") as saved:
-            items: dict[str, list[str]] = json.load(saved)
-
+    def do_stuff(self) -> None:
         # Add title:
         win_title = "Shit to do"
-        title_pane = SimplePane(Geometry(Position(), Size(columns, 3)))
+        title_pane = SimplePane(Geometry(Position(), Size(self.columns, 3)))
         title_pane.addstr_centered(1, win_title)
         title_pane.getch()
 
         # Split in two panes.
 
         horz_padding = 0
-        if columns > self.MIN_WIDTH:
+        if self.columns > self.MIN_WIDTH:
             max_horz_padding = 16
-            horz_padding = min((columns - self.MIN_WIDTH) //
+            horz_padding = min((self.columns - self.MIN_WIDTH) //
                                2, max_horz_padding)
 
-        available_width = columns - horz_padding * 2
+        available_width = self.columns - horz_padding * 2
         pane_left_w = available_width // 2
         pane_right_w = available_width - pane_left_w
 
@@ -88,20 +78,20 @@ class App:
         #     rows - 6, pane_right_w, 3, pane_left_w + horz_padding)
 
         pane_left = Pane(Geometry(Position(horz_padding, 3), Size(
-            pane_left_w, rows - 6)), Padding(1, 2), True)
+            pane_left_w, self.rows - 6)), Padding(1, 2), True)
         pane_left.addstr("Left")
         pane_left.getch()
 
         pane_right = Pane(Geometry(Position(pane_left_w + horz_padding, 3),
-                          Size(pane_right_w, rows - 6)), Padding(1, 2), True)
+                          Size(pane_right_w, self.rows - 6)), Padding(1, 2), True)
         pane_right.addstr("Right")
         pane_right.getch()
 
         # Insert window:
         input_win_w = self.MIN_WIDTH
         input_win_h = 3
-        input_win_x = (columns - self.MIN_WIDTH) // 2
-        input_win_y = rows // 2 - 2
+        input_win_x = (self.columns - self.MIN_WIDTH) // 2
+        input_win_y = self.rows // 2 - 2
         # input_win = curses.newwin(
         #     input_win_h,
         #     input_win_w,
@@ -148,31 +138,31 @@ class App:
             last = 0
             curses.curs_set(True)
             while True:
-                screen.move(rows - 1, 0)
-                screen.clrtoeol()
-                screen.addstr(
+                self.screen.move(self.rows - 1, 0)
+                self.screen.clrtoeol()
+                self.screen.addstr(
                     f"hex: {hex(last):>6} oct: {oct(last):>6} dec: {last:>6}", curses.A_ITALIC)
-                next = screen.getch()
+                next = self.screen.getch()
                 if last == next:
                     break
                 last = next
-            screen.move(rows - 1, 0)
-            screen.clrtoeol()
-            screen.noutrefresh()
+            self.screen.move(self.rows - 1, 0)
+            self.screen.clrtoeol()
+            self.screen.noutrefresh()
             curses.curs_set(False)
 
         def delete_item(key: str) -> bool:
-            screen.move(rows - 1, 0)
-            screen.clrtoeol()
+            self.screen.move(self.rows - 1, 0)
+            self.screen.clrtoeol()
             curses.curs_set(True)
-            screen.addstr(f'Delete item "{key}"? ')
-            action = screen.getch()
+            self.screen.addstr(f'Delete item "{key}"? ')
+            action = self.screen.getch()
             if chr(action) == '\n':
-                del items[key]
+                del self.items[key]
                 return True
-            screen.move(rows - 1, 0)
-            screen.clrtoeol()
-            screen.noutrefresh()
+            self.screen.move(self.rows - 1, 0)
+            self.screen.clrtoeol()
+            self.screen.noutrefresh()
             curses.curs_set(False)
             return False
 
@@ -180,7 +170,7 @@ class App:
         quit = False
 
         while not quit:
-            todos = list(items.keys())
+            todos = list(self.items.keys())
 
             pane_left.erase()
             pane_right.erase()
@@ -193,7 +183,7 @@ class App:
 
             pane_left.noutrefresh()
 
-            sub_items = items[todos[selected]]
+            sub_items = self.items[todos[selected]]
             if len(sub_items) == 0:
                 pane_right.addstr("???")
             else:
@@ -217,16 +207,28 @@ class App:
                 case 'i':
                     new_item = get_item()
                     if len(new_item) > 0:
-                        items[new_item] = []
+                        self.items[new_item] = []
                         with open("./items.json", "w") as file:
-                            file.write(json.dumps(items, indent="  "))
+                            file.write(json.dumps(self.items, indent="  "))
                 case 'c':
                     show_codes()
                 case 'x':
                     if delete_item(todos[selected]):
                         with open("./items.json", "w") as file:
-                            file.write(json.dumps(items, indent="  "))
+                            file.write(json.dumps(self.items, indent="  "))
                         if selected > 0:
                             selected -= 1
                 case 'q' | '\x1b':
                     quit = True
+
+    def run(self):
+        """
+        Start here!
+        """
+        try:
+            self.load()
+            self.do_stuff()
+        except Exception as e:
+            raise e
+        finally:
+            self.end()
