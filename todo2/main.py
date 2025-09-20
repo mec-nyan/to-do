@@ -13,4 +13,4 @@ from app import App
 
 if __name__ == "__main__":
     _app = App()
-    curses.wrapper(_app.run)
+    _app.run()

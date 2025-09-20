@@ -12,6 +12,10 @@ import json
 from pane import Pane, SimplePane, Geometry, Position, Size, Padding
 
 
+class ErrorNoColours(Exception):
+    ...
+
+
 class App:
     """
     This is the main app.
@@ -22,11 +26,37 @@ class App:
 
     MIN_WIDTH = 100
 
-    def __init__(self):
-        # Use this to pass options.
-        pass
+    def __init__(self, opts=None) -> None:
+        ...
 
-    def run(self, _):
+    def init(self) -> None:
+        if not curses.has_colors():
+            raise ErrorNoColours
+
+        self.screen = curses.initscr()
+        self.rows, self.columns = self.screen.getmaxyx()
+
+        curses.noecho()
+        curses.cbreak()
+        curses.curs_set(False)
+        self.screen.keypad(1)
+
+        try:
+            curses.start_color()
+            curses.use_default_colors()
+        except:
+            raise ErrorNoColours
+
+    def load(self, file: str = "items.json") -> None:
+        ...
+
+    def end(self) -> None:
+        self.screen.keypad(0)
+        curses.echo()
+        curses.nocbreak()
+        curses.endwin()
+
+    def run(self):
         """
         Start here!
         """
@@ -34,20 +64,6 @@ class App:
         # TODO: Check if the file exists.
         with open("items.json", "r") as saved:
             items: dict[str, list[str]] = json.load(saved)
-
-        # ┌────┐
-        # │ UI │
-        # └────┘
-
-        if not curses.has_colors():
-            sys.exit(1)
-
-        curses.start_color()
-        curses.use_default_colors()
-        curses.curs_set(False)
-
-        screen = curses.initscr()
-        rows, columns = screen.getmaxyx()
 
         # Add title:
         win_title = "Shit to do"
