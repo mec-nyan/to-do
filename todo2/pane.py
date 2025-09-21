@@ -155,6 +155,9 @@ class SimplePane:
     def move(self, x, y) -> None:
         self.rect.move(y, x)
 
+    def available_width(self) -> int:
+        return self.cols
+
 
 class Pane(SimplePane):
 
@@ -206,3 +209,6 @@ class Pane(SimplePane):
                 case _:
                     ...
             self.outer_rect.noutrefresh()
+
+    def available_width(self) -> int:
+        return self.inner_cols
