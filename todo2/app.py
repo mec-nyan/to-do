@@ -112,18 +112,30 @@ class App:
 
     def do_stuff(self) -> None:
         pane_left, pane_right, input_win = self.put_panes()
+        pane_left.addstr("Left")
+        pane_left.noutrefresh()
+        pane_right.addstr("Right")
+        pane_right.noutrefresh()
+        input_win.addstr("Input")
+        input_win.rect.refresh()
+        input_win.outer_rect.box()
+        input_win.outer_rect.refresh()
         input_win.getch()
-        sys.exit()
+        # sys.exit()
+        pane_left.rect.box()
+        pane_left.refresh()
+        pane_right.rect.box()
+        pane_right.refresh()
 
         def get_item() -> str:
-            max_str_len = input_win_w - 7
+            max_str_len = input_win.available_width() - 3
             curses.curs_set(True)
             input_str = []
             getting = True
             accept = False
             while getting:
                 input_win.erase()
-                input_win.box()
+                # input_win.box()
                 input_win.addstr(1, 2, f"> {''.join(input_str)}")
                 next = input_win.getch()
                 match chr(next):
