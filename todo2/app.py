@@ -58,6 +58,52 @@ class App:
         self.title_pane.addstr_centered(1, self.title)
         self.title_pane.getch()
 
+    def get_left_pane_size(self, width: int, padding: int) -> Geometry:
+        return Geometry(
+            # Left 3 rows at the top (title) and 3 at the bottom (status)
+            Position(padding, 3),
+            Size(width // 2, self.rows - 6),
+        )
+
+    def get_right_pane_size(self, width: int, left_width: int,
+                            padding: int) -> Geometry:
+        return Geometry(
+            # Left 3 rows at the top (title) and 3 at the bottom (status)
+            Position(left_width + padding, 3),
+            Size(width - left_width, self.rows - 6),
+        )
+
+    def get_input_win_size(self) -> Geometry:
+        return Geometry(
+            Position((self.columns - self.MIN_WIDTH) // 2, self.rows // 2 - 2),
+            Size(self.MIN_WIDTH, 3)
+        )
+
+    def get_available_width(self) -> tuple[int, int]:
+        horz_padding = 0
+        if self.columns > self.MIN_WIDTH:
+            max_horz_padding = 16
+            horz_padding = min((self.columns - self.MIN_WIDTH) //
+                               2, max_horz_padding)
+        return self.columns - horz_padding * 2, horz_padding
+
+    def put_panes(self) -> tuple[Pane, Pane, Pane]:
+        available_width, margin_left = self.get_available_width()
+
+        padding = Padding(1, 2)
+        left_geom = self.get_left_pane_size(available_width, margin_left)
+        pane_left = Pane(left_geom, padding, True)
+
+        right_geom = self.get_right_pane_size(available_width,
+                                              left_geom.size.width, margin_left)
+        pane_right = Pane(right_geom, padding, True)
+
+        # Insert window:
+        input_geom = self.get_input_win_size()
+        input_win = Pane(input_geom, Padding(), True)
+
+        return pane_left, pane_right, input_win
+
     def end(self) -> None:
         self.screen.keypad(0)
         curses.echo()
@@ -65,43 +111,8 @@ class App:
         curses.endwin()
 
     def do_stuff(self) -> None:
-        # Split in two panes.
-
-        horz_padding = 0
-        if self.columns > self.MIN_WIDTH:
-            max_horz_padding = 16
-            horz_padding = min((self.columns - self.MIN_WIDTH) //
-                               2, max_horz_padding)
-
-        available_width = self.columns - horz_padding * 2
-        pane_left_w = available_width // 2
-        pane_right_w = available_width - pane_left_w
-
-        pane_left = Pane(Geometry(Position(horz_padding, 3), Size(
-            pane_left_w, self.rows - 6)), Padding(1, 2), True)
-        pane_left.addstr("Left")
-        pane_left.getch()
-
-        pane_right = Pane(Geometry(Position(pane_left_w + horz_padding, 3),
-                          Size(pane_right_w, self.rows - 6)), Padding(1, 2), True)
-        pane_right.addstr("Right")
-        pane_right.getch()
-
-        # Insert window:
-        input_win_w = self.MIN_WIDTH
-        input_win_h = 3
-        input_win_x = (self.columns - self.MIN_WIDTH) // 2
-        input_win_y = self.rows // 2 - 2
-        # input_win = curses.newwin(
-        #     input_win_h,
-        #     input_win_w,
-        #     input_win_y,
-        #     input_win_x)
-
-        input_win = Pane(Geometry(Position(input_win_x, input_win_y), Size(
-            input_win_w, input_win_h)), Padding(), True)
+        pane_left, pane_right, input_win = self.put_panes()
         input_win.getch()
-
         sys.exit()
 
         def get_item() -> str:
